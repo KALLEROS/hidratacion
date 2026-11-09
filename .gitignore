@@ -1,0 +1,6 @@
+# Llaves privadas: nunca se suben
+.secretos/
+
+node_modules/
+avisos/estado.json
+.claude/

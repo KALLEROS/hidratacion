@@ -1,0 +1,9 @@
+{
+  "name": "hidratacion-estacion-avisos",
+  "private": true,
+  "description": "Manda los avisos de agua al teléfono desde GitHub Actions.",
+  "type": "module",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2aa3dc"/><stop offset="1" stop-color="#0e76ae"/></linearGradient>
+  <clipPath id="g"><path d="M43 29 C43 35 25.5 35 25.5 45 V79 Q25.5 86 32.5 86 H67.5 Q74.5 86 74.5 79 V45 C74.5 35 57 35 57 29 Z"/></clipPath></defs>
+  <rect width="100" height="100" rx="22" fill="url(#f)"/>
+  <rect x="43" y="22" width="14" height="8" rx="1" fill="#f4fbfe"/>
+  <rect x="40.5" y="16" width="19" height="7.5" rx="2.5" fill="#fff"/>
+  <path d="M43 29 C43 35 25.5 35 25.5 45 V79 Q25.5 86 32.5 86 H67.5 Q74.5 86 74.5 79 V45 C74.5 35 57 35 57 29 Z" fill="#f4fbfe"/>
+  <path clip-path="url(#g)" d="M20 57 q7.5 -2.5 15 0 t15 0 t15 0 t15 0 t15 0 V90 H20 Z" fill="#8fd3f2"/>
+</svg>

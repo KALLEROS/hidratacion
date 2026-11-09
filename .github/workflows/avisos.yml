@@ -1,0 +1,59 @@
+name: Avisos de agua
+
+# Cada 30 minutos revisa si toca mandarte un aviso según el horario de tu código.
+# Corre a los :02 y :32 porque a la hora en punto GitHub suele atrasarse más.
+on:
+  schedule:
+    - cron: "2,32 * * * *"
+  workflow_dispatch:
+    inputs:
+      prueba:
+        description: "Mandar un aviso de prueba ahora mismo"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: avisos
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Recordar el último aviso enviado
+        uses: actions/cache/restore@v4
+        with:
+          path: avisos/estado.json
+          key: avisos-estado-${{ github.run_id }}
+          restore-keys: avisos-estado-
+
+      - name: Instalar
+        working-directory: avisos
+        run: npm install --no-audit --no-fund
+
+      - name: Mandar aviso si toca
+        id: enviar
+        working-directory: avisos
+        env:
+          AVISOS_CODIGO: ${{ secrets.AVISOS_CODIGO }}
+          VAPID_PUBLICA: ${{ secrets.VAPID_PUBLICA }}
+          VAPID_PRIVADA: ${{ secrets.VAPID_PRIVADA }}
+          PRUEBA: ${{ github.event_name == 'workflow_dispatch' && inputs.prueba }}
+        run: node enviar.mjs
+
+      - name: Guardar el último aviso enviado
+        if: always() && steps.enviar.outputs.cambio == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: avisos/estado.json
+          key: avisos-estado-${{ github.run_id }}-${{ github.run_attempt }}
