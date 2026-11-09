@@ -9,7 +9,7 @@
 //   AVISOS_CODIGO=HE1.... node enviar.mjs --simular --ahora=2026-11-08T16:02:00Z
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 
-const SUJETO = 'https://kalleros.github.io/hidratacion-estacion/';
+const SUJETO = 'https://kalleros.github.io/hidratacion/';
 const TOLERANCIA_MIN = 50; // si GitHub se atrasa, todavía manda el aviso hasta 50 min tarde
 const ESTADO = new URL('./estado.json', import.meta.url);
 

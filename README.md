@@ -2,7 +2,7 @@
 
 App para el iPhone que te recuerda tomar agua durante el día y lleva tu registro. Funciona sin internet.
 
-**App:** https://kalleros.github.io/hidratacion-estacion/
+**App:** https://kalleros.github.io/hidratacion/
 
 | Pestaña | Para qué |
 |---|---|
@@ -13,7 +13,7 @@ App para el iPhone que te recuerda tomar agua durante el día y lleva tu registr
 
 ## Instalarla en el iPhone
 
-1. Abre https://kalleros.github.io/hidratacion-estacion/ en **Safari**.
+1. Abre https://kalleros.github.io/hidratacion/ en **Safari**.
 2. Toca **Compartir** (cuadro con flecha) y luego **Agregar a inicio**.
 3. Ábrela desde el ícono del garrafón. Ya instalada, abre aunque no haya señal.
 
