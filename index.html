@@ -1104,7 +1104,7 @@
       var ahora = new Date();
       var hora = HE.aHora(ahora.getHours() * 60 + ahora.getMinutes());
       if (reg.active) reg.active.postMessage({ tipo: 'mostrar-aviso', prueba: true, fecha: hoyK(), hora: hora });
-      toast(esIOS ? 'Listo. Si no lo ves, sal de la app un momento.' : 'Aviso de prueba enviado');
+      toast(esIOS ? 'Listo. Con la app abierta el iPhone puede no mostrarlo: prueba desde GitHub con la app cerrada.' : 'Aviso de prueba enviado');
     });
   }
   // Si el teléfono perdió la suscripción, pide activarla otra vez.
