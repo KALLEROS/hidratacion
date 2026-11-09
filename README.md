@@ -4,6 +4,8 @@ App para el iPhone que te recuerda tomar agua durante el día y lleva tu registr
 
 **App:** https://kalleros.github.io/hidratacion/
 
+<img src="qr-hidratacion.png" alt="QR para abrir la app" width="220">
+
 | Pestaña | Para qué |
 |---|---|
 | **Hoy** | El garrafón se llena con lo que tomas. Cada raya es un vaso; lleno hasta los hombros es tu meta. Anota un vaso, un sorbo, una botella u otra cantidad. |
