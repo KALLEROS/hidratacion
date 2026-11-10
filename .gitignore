@@ -4,3 +4,4 @@
 node_modules/
 avisos/estado.json
 .claude/
+.wrangler/
