@@ -446,7 +446,7 @@
           </select>
         </label>
       </div>
-      <p class="sec-foot aviso" id="horarioCambio" hidden>Cambiaste el horario. Ve a Ajustes, copia tu código de avisos otra vez y reemplázalo en GitHub para que los avisos lleguen a las horas nuevas.</p>
+      <p class="sec-foot aviso" id="horarioCambio" hidden>Tu horario nuevo se manda solo en cuanto haya internet. Mientras, los avisos siguen llegando a las horas anteriores.</p>
     </div>
   </section>
 
@@ -514,7 +514,7 @@
     <div class="sec">
       <div class="sec-head">Avisos en el teléfono</div>
       <div class="group" id="avisosBox"></div>
-      <p class="sec-foot">Los avisos los manda GitHub a las horas de tu horario. Para recibirlos el teléfono necesita señal; la app funciona sin internet.</p>
+      <p class="sec-foot">Los avisos salen de un reloj en internet a las horas de tu horario. Para recibirlos el teléfono necesita señal; la app funciona sin internet.</p>
     </div>
 
     <div class="sec">
@@ -562,9 +562,9 @@
 (function () {
   'use strict';
 
-  // Llave pública para avisos (la privada vive solo en los secretos de GitHub).
+  // Llave pública para avisos (la privada vive solo en los secretos del reloj de avisos en Cloudflare).
   var VAPID_PUBLICA = 'BBt0alspOaW0j1V6hK-Rz95TG5VO2nJ9x9-HksAQEPgiRH9_f-Fq7IXf4_W_d_D-sPz-GxEhWmN8n-Jzxm_te8U';
-  var REPO = 'KALLEROS/hidratacion';
+  var AVISOS_URL = 'https://hidratacion-avisos.kalleros.workers.dev';
 
   var $ = function (s) { return document.querySelector(s); };
   var nf = new Intl.NumberFormat('es-MX');
@@ -623,7 +623,7 @@
       render();
     });
   }
-  function guardarAj() { return HE.guardarAjustes(aj).then(function (a) { aj = a; render(); }); }
+  function guardarAj() { return HE.guardarAjustes(aj).then(function (a) { aj = a; render(); sincronizarAvisos(); }); }
 
   function anotar(ml, origen) {
     ml = Math.round(ml);
@@ -964,8 +964,9 @@
     }
   }
 
+  // El horario de este teléfono todavía no llega al reloj de avisos.
   function horarioCambio() {
-    return !!(aj.sub && aj.codigoHorario && aj.codigoHorario !== horasHoy().join(','));
+    return !!(soporteAvisos && aj.sub && Notification.permission === 'granted' && aj.registrado !== firmaRegistro());
   }
 
   function renderAjustes() {
@@ -988,8 +989,7 @@
   var firmaAvisos = '';
   function renderAvisos() {
     var permiso = soporteAvisos ? Notification.permission : 'no';
-    var codigo = aj.sub ? codigoAvisos() : '';
-    var firma = [soporteAvisos, permiso, esIOS, instalada, codigo, aj.codigoHorario, horasHoy().join(',')].join('|');
+    var firma = [soporteAvisos, permiso, esIOS, instalada, aj.sub ? aj.sub.endpoint : '', aj.registrado, firmaRegistro(), enviando].join('|');
     if (firma === firmaAvisos) return;
     firmaAvisos = firma;
     var box = $('#avisosBox'); box.innerHTML = '';
@@ -1018,50 +1018,26 @@
       box.appendChild(d.caja); return;
     }
 
-    // Activados: pasos para que GitHub los mande.
-    var copiado = !!aj.codigoHorario;
-    var cambio = horarioCambio();
-    var ol = el('ol', 'pasos');
-
-    var li0 = el('li', 'hecho');
-    li0.appendChild(el('b', '', ICON.check));
-    var t0 = el('div', ''); t0.innerHTML = '<span class="t">Avisos permitidos en este teléfono</span>';
-    li0.appendChild(t0); ol.appendChild(li0);
-
-    var li1 = el('li', copiado && !cambio ? 'hecho' : '');
-    li1.appendChild(el('b', '', copiado && !cambio ? ICON.check : '2'));
-    var t1 = el('div', '');
-    t1.innerHTML = '<span class="t">' + (cambio ? 'Copia tu código otra vez' : 'Copia tu código de avisos') + '</span>' +
-      '<span class="d">' + (cambio ? 'Cambiaste tu horario y el código lleva las horas nuevas.' : 'Lleva tu horario y la dirección de este teléfono.') + '</span>';
-    var a1 = el('div', 'acc');
-    var bc = el('button', 'boton'); bc.type = 'button'; bc.textContent = 'Copiar código';
-    bc.addEventListener('click', copiarCodigo);
-    a1.appendChild(bc); t1.appendChild(a1);
-    var ta = el('textarea', 'codigo'); ta.readOnly = true; ta.id = 'codigoTxt'; ta.value = codigo; ta.setAttribute('aria-label', 'Código de avisos');
-    t1.appendChild(ta);
-    li1.appendChild(t1); ol.appendChild(li1);
-
-    var li2 = el('li', '');
-    li2.appendChild(el('b', '', '3'));
-    var t2 = el('div', '');
-    t2.innerHTML = '<span class="t">Pégalo en GitHub</span><span class="d">En «New repository secret» (o edita el que ya existe) ponle de nombre <code>AVISOS_CODIGO</code> y pega el código.</span>';
-    var a2 = el('div', 'acc');
-    var lg = el('a', 'boton suave'); lg.href = 'https://github.com/' + REPO + '/settings/secrets/actions'; lg.target = '_blank'; lg.rel = 'noopener'; lg.textContent = 'Abrir GitHub';
-    a2.appendChild(lg); t2.appendChild(a2);
-    li2.appendChild(t2); ol.appendChild(li2);
-
-    var li3 = el('li', '');
-    li3.appendChild(el('b', '', '4'));
-    var t3 = el('div', '');
-    t3.innerHTML = '<span class="t">Prueba que llegan</span><span class="d">El primero sale de aquí mismo. El segundo lo manda GitHub con «Run workflow» y tarda un minuto.</span>';
-    var a3 = el('div', 'acc');
-    var bp = el('button', 'boton suave'); bp.type = 'button'; bp.textContent = 'Probar aquí';
+    // Activados: el horario se manda solo al reloj de avisos.
+    if (horarioCambio()) {
+      var e = estadoBox('pend', ICON.campana, enviando ? 'Mandando tu horario…' : 'Falta mandar tu horario',
+        'Los avisos salen de un reloj en internet. Tu horario se manda solo en cuanto haya señal.');
+      if (!enviando) {
+        var ae = el('div', 'acc');
+        var br = el('button', 'boton'); br.type = 'button'; br.textContent = 'Mandar ahora';
+        br.addEventListener('click', function () { sincronizarAvisos(true); });
+        ae.appendChild(br); e.texto.appendChild(ae);
+      }
+      box.appendChild(e.caja); return;
+    }
+    var h = horasHoy();
+    var f = estadoBox('ok', ICON.check, 'Avisos activados',
+      h.length ? 'Te llegan a las ' + h.join(', ') + ', aunque la app esté cerrada.' : 'Tu horario no tiene avisos.');
+    var af = el('div', 'acc');
+    var bp = el('button', 'boton suave'); bp.type = 'button'; bp.textContent = 'Mandar aviso de prueba';
     bp.addEventListener('click', probarAviso);
-    var lp = el('a', 'boton suave'); lp.href = 'https://github.com/' + REPO + '/actions/workflows/avisos.yml'; lp.target = '_blank'; lp.rel = 'noopener'; lp.textContent = 'Probar desde GitHub';
-    a3.appendChild(bp); a3.appendChild(lp); t3.appendChild(a3);
-    li3.appendChild(t3); ol.appendChild(li3);
-
-    box.appendChild(ol);
+    af.appendChild(bp); f.texto.appendChild(af);
+    box.appendChild(f.caja);
   }
 
   /* ---------------- avisos (push) ---------------- */
@@ -1072,11 +1048,33 @@
     for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
     return out;
   }
-  function codigoAvisos() {
+  function zonaHoraria() {
     var tz = 'America/Mexico_City';
     try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) {}
-    var datos = { v: 1, sub: aj.sub, tz: tz, horas: horasHoy() };
-    return 'HE1.' + btoa(JSON.stringify(datos)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return tz;
+  }
+  function firmaRegistro() {
+    return aj.sub ? [aj.sub.endpoint, zonaHoraria(), horasHoy().join(',')].join('|') : '';
+  }
+  // Manda la dirección de este teléfono y su horario al reloj de avisos (Cloudflare).
+  var enviando = false;
+  function sincronizarAvisos(aMano) {
+    if (enviando || !soporteAvisos || !aj.sub || Notification.permission !== 'granted') return Promise.resolve();
+    var firma = firmaRegistro();
+    if (aj.registrado === firma && !aMano) return Promise.resolve();
+    enviando = true; firmaAvisos = ''; render();
+    return fetch(AVISOS_URL + '/registrar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sub: aj.sub, tz: zonaHoraria(), horas: horasHoy() })
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      enviando = false;
+      aj.registrado = firma;
+      return guardarAj().then(function () { if (aMano) toast('Horario mandado. Los avisos ya llegan a tus horas.'); });
+    }).catch(function () {
+      enviando = false; firmaAvisos = ''; render();
+      if (aMano) toast('No se pudo mandar. Revisa que tengas internet e inténtalo otra vez.');
+    });
   }
   function activarAvisos() {
     Notification.requestPermission().then(function (p) {
@@ -1087,34 +1085,32 @@
         });
       }).then(function (sub) {
         aj.sub = JSON.parse(JSON.stringify(sub));
-        aj.codigoHorario = '';
-        return guardarAj().then(function () { toast('Avisos activados. Ahora copia tu código.'); });
+        aj.registrado = '';
+        return guardarAj().then(function () { return sincronizarAvisos(true); });
       });
     }).catch(function () { toast('No se pudieron activar los avisos. Inténtalo otra vez.'); });
   }
-  function copiarCodigo() {
-    var codigo = codigoAvisos();
-    var listo = function () { aj.codigoHorario = horasHoy().join(','); guardarAj(); toast('Código copiado. Pégalo en GitHub.'); };
-    var aMano = function () { var ta = $('#codigoTxt'); if (ta) { ta.focus(); ta.select(); } toast('Mantén presionado el código y elige Copiar.'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(codigo).then(listo, aMano);
-    else aMano();
-  }
+  // El reloj de avisos manda uno de prueba a este teléfono, igual que los de tu horario.
   function probarAviso() {
-    navigator.serviceWorker.ready.then(function (reg) {
-      var ahora = new Date();
-      var hora = HE.aHora(ahora.getHours() * 60 + ahora.getMinutes());
-      if (reg.active) reg.active.postMessage({ tipo: 'mostrar-aviso', prueba: true, fecha: hoyK(), hora: hora });
-      toast(esIOS ? 'Listo. Con la app abierta el iPhone puede no mostrarlo: prueba desde GitHub con la app cerrada.' : 'Aviso de prueba enviado');
+    fetch(AVISOS_URL + '/probar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: aj.sub.endpoint })
+    }).then(function (r) {
+      if (r.status === 404 || r.status === 410) { aj.registrado = ''; guardarAj().then(function () { sincronizarAvisos(true); }); throw new Error('reg'); }
+      if (!r.ok) throw new Error(r.status);
+      toast(esIOS ? 'Aviso mandado. Sal de la app para verlo llegar.' : 'Aviso de prueba mandado');
+    }).catch(function (e) {
+      if (e.message !== 'reg') toast('No se pudo mandar. Revisa que tengas internet.');
     });
   }
   // Si el teléfono perdió la suscripción, pide activarla otra vez.
   function revisarSuscripcion() {
     if (!soporteAvisos || !aj.sub) return;
     navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (s) {
-      if (!s) { aj.sub = null; aj.codigoHorario = ''; guardarAj(); return; }
+      if (!s) { aj.sub = null; aj.registrado = ''; return guardarAj(); }
       var nueva = JSON.parse(JSON.stringify(s));
-      if (nueva.endpoint !== aj.sub.endpoint) { aj.sub = nueva; aj.codigoHorario = ''; guardarAj(); }
-    }).catch(function () {});
+      if (nueva.endpoint !== aj.sub.endpoint) { aj.sub = nueva; aj.registrado = ''; return guardarAj(); }
+    }).then(function () { return sincronizarAvisos(); }).catch(function () {});
   }
 
   /* ---------------- hoja de pregunta ---------------- */
@@ -1304,6 +1300,7 @@
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
 
   cargar().then(function () { leerURL(); revisarSuscripcion(); });
+  window.addEventListener('online', function () { sincronizarAvisos(); });
   setInterval(function () { if (!hoja) render(); revisarHora(); }, 20000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) cargar().then(revisarHora); });
 })();

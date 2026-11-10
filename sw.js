@@ -1,10 +1,10 @@
 // Service worker de Hidratación Estación.
 // 1) Guarda la app en el teléfono para que abra sin señal.
-// 2) Muestra los avisos que manda GitHub (push) a las horas de tu horario.
+// 2) Muestra los avisos que manda el reloj de avisos (push) a las horas de tu horario.
 // 3) Al tocar el aviso, anota si ya habías tomado agua o no.
 importScripts('./datos.js');
 
-var CACHE = 'hidratacion-v1';
+var CACHE = 'hidratacion-v2';
 var ARCHIVOS = ['./', './index.html', './datos.js', './manifest.webmanifest',
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png'];
 

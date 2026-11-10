@@ -1,0 +1,12 @@
+name = "hidratacion-avisos"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# A los :00 y :30 de cada hora (todas las horas del horario caen en :00 o :30).
+[triggers]
+crons = ["0,30 * * * *"]
+
+[[kv_namespaces]]
+binding = "SUSCRIPCIONES"
+id = "d2315085c59948c99c34e67357f85e04"

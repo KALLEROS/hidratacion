@@ -23,14 +23,11 @@ Los datos se guardan solo en ese teléfono.
 
 ## Activar los avisos
 
-Una app web en el iPhone solo puede recibir avisos con la app cerrada si alguien se los manda. Aquí los manda **GitHub Actions** cada 30 minutos, según tu horario, gratis.
+Una app web en el iPhone solo recibe avisos con la app cerrada si alguien se los manda. Aquí los manda un **reloj en Cloudflare** (gratis) a los :00 y :30 de cada hora, a los teléfonos a los que les toca según su horario.
 
 1. En la app instalada, ve a **Ajustes** y toca **Activar avisos**. Acepta el permiso.
-2. Toca **Copiar código**.
-3. Toca **Abrir GitHub**: en *Settings > Secrets and variables > Actions*, crea (o edita) el secreto **`AVISOS_CODIGO`** y pega el código.
-4. Prueba: **Probar aquí** muestra uno desde el teléfono; **Probar desde GitHub** abre *Actions > Avisos de agua > Run workflow* para que GitHub te mande uno.
-
-Si cambias el horario, la app te avisa: copia el código otra vez y reemplaza `AVISOS_CODIGO`.
+2. Listo: la app manda sola tu horario al reloj. Si cambias el horario, lo vuelve a mandar en cuanto haya internet.
+3. Para probar, toca **Mandar aviso de prueba** y sal de la app.
 
 ### Al tocar el aviso
 
@@ -48,25 +45,23 @@ Con la app abierta, a la hora del aviso suena una gota y sale la misma pregunta.
 | `index.html` | La app. |
 | `datos.js` | Guarda todo en el teléfono (IndexedDB). Lo comparten la app y el service worker. |
 | `sw.js` | Guarda la app para usarla sin señal, muestra los avisos y anota la respuesta al tocarlos. |
-| `avisos/enviar.mjs` | Lo corre GitHub: revisa tu horario y manda el aviso que toca. |
-| `.github/workflows/avisos.yml` | Corre `enviar.mjs` cada 30 minutos (a los :02 y :32). |
-| `.github/workflows/mantener.yml` | GitHub apaga los horarios de un repo sin cambios en 60 días; esto los vuelve a encender cada 2 semanas. |
+| `cloudflare/worker.js` | El reloj de avisos. Guarda el horario de cada teléfono y le manda el aviso a su hora. |
+| `cloudflare/wrangler.toml` | Configuración del reloj: corre a los :00 y :30 de cada hora. |
 | `herramientas/iconos.mjs` | Dibuja los íconos. |
 | `herramientas/servir.mjs` | Sirve la app en `http://localhost:5178` para probarla en la PC. |
 
-### Secretos de GitHub
+### El reloj de avisos (Cloudflare)
+
+Vive en https://hidratacion-avisos.kalleros.workers.dev y se publica desde la carpeta `cloudflare`:
+
+```bash
+cd cloudflare
+npx wrangler deploy
+```
 
 | Secreto | Qué es |
 |---|---|
 | `VAPID_PUBLICA` | Llave pública de los avisos (también está en `index.html`). |
-| `VAPID_PRIVADA` | Llave privada. Solo vive en GitHub y en `.secretos/vapid.json` de la PC, que no se sube. |
-| `AVISOS_CODIGO` | Tu horario y la dirección de tu teléfono, copiado desde la app. |
+| `VAPID_PRIVADA` | Llave privada. Solo vive en Cloudflare y en `.secretos/vapid.json` de la PC, que no se sube. |
 
-GitHub a veces atrasa los horarios automáticos unos minutos; el aviso se manda aunque llegue hasta 50 minutos tarde y nunca se repite.
-
-### Probar el envío sin mandar nada
-
-```bash
-cd avisos
-AVISOS_CODIGO="HE1...." node enviar.mjs --simular --ahora=2026-11-08T16:02:00Z
-```
+Se ponen con `npx wrangler secret put VAPID_PRIVADA`. Los teléfonos registrados se guardan en el KV `SUSCRIPCIONES`; si un teléfono deja de aceptar avisos, se borra solo.

@@ -16,7 +16,7 @@
     cada: 90,       // minutos entre avisos (múltiplo de 30)
     sonido: true,
     sub: null,          // suscripción a avisos de este teléfono
-    codigoHorario: ''   // horario que llevaba el último código copiado
+    registrado: ''      // lo último que se mandó al reloj de avisos (dirección + zona + horas)
   };
 
   function abrir() {
